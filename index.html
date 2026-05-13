@@ -373,7 +373,7 @@
     <li><a href="#">Mission</a></li>
     <li><a href="#">Contact</a></li>
   </ul>
-  <button class="nav-cta" id="notifyBtn" type="button">Get Notified</button>
+  <a class="nav-cta" href="#">Get Notified</a>
 </nav>
 
 <main>
@@ -656,9 +656,9 @@
     emailInput.removeAttribute('aria-invalid');
   }
 
-  // Wire "Get Notified" nav link/button
-  document.querySelectorAll('a.nav-cta, button.nav-cta').forEach(btn => {
-    btn.addEventListener('click', e => { e.preventDefault?.(); openModal(); });
+  // Wire "Get Notified" nav link
+  document.querySelectorAll('a.nav-cta').forEach(btn => {
+    btn.addEventListener('click', e => { e.preventDefault(); openModal(); });
   });
 
   closeBtn.addEventListener('click', closeModal);
