@@ -449,5 +449,270 @@
   </div>
 </footer>
 
+<!-- Get Notified Modal -->
+<div id="notify-overlay" aria-modal="true" role="dialog" aria-labelledby="notify-title" hidden>
+  <div id="notify-modal">
+    <button id="notify-close" aria-label="Close">&times;</button>
+    <div id="notify-content">
+      <div class="notify-rule">
+        <div class="notify-rule-line"></div>
+        <div class="notify-rule-diamond"></div>
+        <div class="notify-rule-line"></div>
+      </div>
+      <h2 id="notify-title">Stay Informed</h2>
+      <p id="notify-desc">Be among the first to know when AI Safety Force Canada launches. Enter your email below.</p>
+      <form id="notify-form" novalidate>
+        <div class="notify-field">
+          <input
+            type="email"
+            id="notify-email"
+            name="email"
+            placeholder="your@email.com"
+            autocomplete="email"
+            required
+            aria-describedby="notify-error"
+          />
+          <span id="notify-error" class="notify-error" role="alert" hidden></span>
+        </div>
+        <button type="submit" id="notify-submit">Notify Me</button>
+      </form>
+      <div id="notify-success" hidden>
+        <div class="notify-check">&#10003;</div>
+        <p>You're on the list. We'll be in touch.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #notify-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  #notify-overlay.visible { opacity: 1; }
+
+  #notify-modal {
+    background: #0a0a0a;
+    border: 1px solid var(--gold-dim);
+    max-width: 460px;
+    width: 100%;
+    padding: 2.5rem 2rem;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+  #notify-overlay.visible #notify-modal { transform: translateY(0); }
+
+  #notify-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--gray-light);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.25rem;
+    transition: color 0.2s;
+  }
+  #notify-close:hover { color: var(--gold); }
+
+  .notify-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .notify-rule-line { flex: 1; height: 1px; background: var(--gold-dim); }
+  .notify-rule-diamond {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  #notify-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  #notify-desc {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--gray-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+
+  .notify-field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+
+  #notify-email {
+    width: 100%;
+    background: #111;
+    border: 1px solid var(--gold-dim);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.65rem 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #notify-email:focus { border-color: var(--gold); }
+  #notify-email::placeholder { color: #555; }
+
+  .notify-error {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: #c0392b;
+  }
+
+  #notify-submit {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  #notify-submit:hover:not(:disabled) { background: var(--gold); color: var(--black); }
+  #notify-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #notify-success {
+    text-align: center;
+    padding: 1rem 0;
+  }
+  .notify-check {
+    font-size: 2.5rem;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+    line-height: 1;
+  }
+  #notify-success p {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    color: var(--gray-light);
+    letter-spacing: 0.05em;
+  }
+</style>
+
+<script>
+(function () {
+  // ── Configuration ─────────────────────────────────────────────────────────
+  // To capture emails, create a free form at https://formspree.io and paste
+  // your form ID below (e.g. "xrgjabc1").  Leave empty to fall back to mailto.
+  const FORMSPREE_ID = 'mbdwbnwr';
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const overlay   = document.getElementById('notify-overlay');
+  const form      = document.getElementById('notify-form');
+  const emailInput = document.getElementById('notify-email');
+  const submitBtn = document.getElementById('notify-submit');
+  const errorEl   = document.getElementById('notify-error');
+  const successEl = document.getElementById('notify-success');
+  const closeBtn  = document.getElementById('notify-close');
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+    emailInput.focus();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    overlay.classList.remove('visible');
+    overlay.addEventListener('transitionend', () => {
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+    }, { once: true });
+  }
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    emailInput.setAttribute('aria-invalid', 'true');
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    emailInput.removeAttribute('aria-invalid');
+  }
+
+  // Wire "Get Notified" nav link
+  document.querySelectorAll('a.nav-cta').forEach(btn => {
+    btn.addEventListener('click', e => { e.preventDefault(); openModal(); });
+  });
+
+  closeBtn.addEventListener('click', closeModal);
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !overlay.hidden) closeModal();
+  });
+
+  emailInput.addEventListener('input', clearError);
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    clearError();
+
+    const email = emailInput.value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError('Please enter a valid email address.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    try {
+      if (FORMSPREE_ID) {
+        const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error('Server error');
+      } else {
+        // Fallback: open mail client pre-addressed so the user can send manually
+        window.location.href =
+          `mailto:aisafetyforce@gmail.com?subject=Notify%20Me&body=Please%20add%20me%20to%20the%20launch%20list%3A%20${encodeURIComponent(email)}`;
+      }
+
+      form.hidden = true;
+      successEl.hidden = false;
+
+      // Auto-close after 3 s
+      setTimeout(closeModal, 3000);
+    } catch {
+      showError('Something went wrong. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Notify Me';
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
